@@ -10,7 +10,7 @@ plugins {
 // Desktop (Windows + Linux) app. The UI, view models and data layer come from :shared; audio
 // playback comes from :desktop-audio (pure-JVM decoders + a looping software mixer).
 
-val appVersion = "1.1.6"
+val appVersion = "1.0.0"
 
 kotlin {
     compilerOptions {
