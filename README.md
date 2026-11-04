@@ -2,7 +2,7 @@
 
 # Blanko
 
-**Listen to different sounds**
+**Listen to different sounds.** 
 
 <br>
 
@@ -10,7 +10,9 @@
 [![Desktop](https://img.shields.io/badge/Windows%20%7C%20macOS%20%7C%20Linux-Desktop-0078D6?logo=linux&logoColor=white)](#installation)
 [![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/docs/multiplatform.html)
 
-> This branch (`kmp-impl`) is the **desktop-only** Kotlin Multiplatform version of Blanko for Windows, macOS and Linux. The Android app lives on `master`.
+> This branch (`kmp-impl`) is the **desktop-only** Kotlin Multiplatform version of Blanko for Windows, macOS and Linux. The Android app belongs to a [separate repository](https://github.com/itsPronay/blankee)`. 
+
+This app was inspired by [Blanket](https://github.com/rafaelmardojai/blanket), originally a GNOME application. You can think of this project as an all-in-one desktop version of Blanket. Supports macOS, Windows, Linux (few versions)
 
 ## Description
 
@@ -22,10 +24,6 @@ Improve focus and increase your productivity by listening to different sounds. B
 - **Sleep Timer** – Set a timer, and the playing sounds will stop automatically
 - **Custom Sounds** – Upload your own audio files
 - **Save Presets** – Create and save your favorite combinations for quick access
-- **Dark & Light Mode** – Full theme support for comfortable use
-- **Multilingual** – 20 supported languages
-- **Individual Volume Controls** – Mix and match sounds to your preference
-- **Responsive Design** – The window resizes from a narrow side panel to a full screen
 - **System Tray** – Keep sounds playing while the window is hidden (where the OS has a tray)
 
 ## Installation
@@ -36,7 +34,7 @@ Download the installer for your system from the [GitHub Releases](https://github
 |---|---|
 | Windows | `.exe` or `.msi` |
 | Linux | `.deb` (Debian, Ubuntu) or `.rpm` (Fedora, openSUSE) |
-| macOS | `.dmg` (unsigned: open it with right-click → Open) |
+| macOS | `.dmg` |
 
 ### Build from Source
 
@@ -57,9 +55,8 @@ Blanko is a Kotlin Multiplatform project with a Compose Multiplatform UI.
 
 ```bash
 # Clone the repository
-git clone https://github.com/itsPronay/blankee.git
-cd blankee
-git checkout kmp-impl
+git clone https://github.com/itsPronay/blanko.git
+cd blanko
 
 # Run the app
 ./gradlew :desktopApp:run
@@ -68,21 +65,11 @@ git checkout kmp-impl
 ./gradlew :desktopApp:packageExe :desktopApp:packageMsi   # Windows
 ./gradlew :desktopApp:packageDeb :desktopApp:packageRpm   # Linux
 ./gradlew :desktopApp:packageDmg                          # macOS (unsigned)
-
-# Run the tests
-./gradlew :desktop-audio:test :shared:desktopTest
 ```
 
 Installers are written to `desktopApp/build/compose/binaries/main/`. Settings, the database and imported custom sounds live in `%APPDATA%\Blanko` on Windows, `~/.local/share/blanko` on Linux and `~/Library/Application Support/Blanko` on macOS. The *Desktop Build* GitHub workflow builds the installers on each OS and uploads every one as a plain (unzipped) artifact. Closing the window keeps the sounds playing from the system tray (where the OS has one); use *Quit* in the tray menu to exit.
 
 The app plays its bundled sounds from Ogg Vorbis files in `desktopApp/src/main/resources/sounds`, trimmed to their exact loop length. Custom sounds can be MP3, M4A/AAC, WAV or OGG.
-
-### Releasing
-
-Releases are created by the *Release* workflow (Actions → Release → Run workflow). Only the repository owner can start it. It builds the Windows, Linux and macOS installers and attaches them as plain files to a GitHub Release tagged `v<version>`.
-
-1. Set the new version in `desktopApp/build.gradle.kts` (`appVersion`) and merge it.
-2. Run the workflow. By default it creates a **draft** release so you can review it before publishing; untick *draft* to publish immediately.
 
 ## Translations
 
@@ -105,5 +92,5 @@ Sounds are sourced from others. For detailed information about sounds licensing,
 <p align="center">
   Inspired by Rafael Mardojai's <a href="https://github.com/rafaelmardojai/blanket">Blanket</a>
   <br>
-  Made with ❤️ by Pronay & Contributors
+  Made with ❤️ by Pronay
 </p>
