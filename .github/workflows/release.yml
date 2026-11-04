@@ -1,0 +1,158 @@
+name: Release
+
+# Manual only: Actions -> Release -> Run workflow.
+# Builds the Windows, Linux and macOS installers and attaches them to a GitHub Release
+# tagged v<appVersion> (the version in desktopApp/build.gradle.kts).
+on:
+  workflow_dispatch:
+    inputs:
+      draft:
+        description: "Create the release as a draft (untick to publish immediately)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Prepare
+    # Only the repository owner may run a release. Anyone else with write access who
+    # starts the workflow gets a skipped run.
+    if: github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Only release from the default branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$GITHUB_REF_NAME" != "$DEFAULT_BRANCH" ]; then
+            echo "::error::Run this workflow from '$DEFAULT_BRANCH' (selected: '$GITHUB_REF_NAME')."
+            exit 1
+          fi
+
+      - name: Read version
+        id: version
+        run: |
+          version=$(sed -nE 's/^val appVersion = "([^"]+)".*/\1/p' desktopApp/build.gradle.kts)
+          if [ -z "$version" ]; then
+            echo "::error::Could not read appVersion from desktopApp/build.gradle.kts"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing v$version"
+
+      - name: Fail if the release already exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::Release v$VERSION already exists. Bump appVersion in desktopApp/build.gradle.kts first."
+            exit 1
+          fi
+
+  build:
+    name: Build (${{ matrix.name }})
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            tasks: ":desktopApp:packageExe :desktopApp:packageMsi"
+            suffix: ""
+          - name: Linux
+            os: ubuntu-latest
+            tasks: ":desktopApp:packageDeb :desktopApp:packageRpm"
+            suffix: ""
+          - name: macOS (Apple silicon)
+            os: macos-latest
+            tasks: ":desktopApp:packageDmg"
+            suffix: "-arm64"
+          - name: macOS (Intel)
+            os: macos-15-intel
+            tasks: ":desktopApp:packageDmg"
+            suffix: "-x64"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Linux packaging tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm fakeroot
+
+      - name: Ensure WiX Toolset 3 (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (-not (Get-Command candle.exe -ErrorAction SilentlyContinue)) {
+            choco install wixtoolset -y --no-progress
+            "C:\Program Files (x86)\WiX Toolset v3.14\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+          }
+
+      - name: Build installers
+        shell: bash
+        run: ./gradlew ${{ matrix.tasks }} --no-daemon --stacktrace
+
+      - name: Collect installers
+        shell: bash
+        env:
+          SUFFIX: ${{ matrix.suffix }}
+        run: |
+          mkdir dist
+          while IFS= read -r -d '' f; do
+            base=$(basename "$f")
+            ext="${base##*.}"
+            name="${base%.*}"
+            cp "$f" "dist/${name}${SUFFIX}.${ext}"
+          done < <(find desktopApp/build/compose/binaries/main -type f \
+            \( -name '*.exe' -o -name '*.msi' -o -name '*.deb' -o -name '*.rpm' -o -name '*.dmg' \) -print0)
+          ls -l dist
+          [ -n "$(ls -A dist)" ] || { echo "::error::No installers were produced"; exit 1; }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ runner.os }}${{ matrix.suffix }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: installers-*
+          merge-multiple: true
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          DRAFT: ${{ inputs.draft }}
+        run: |
+          ls -l dist
+          args=(--repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Blanko $VERSION" --generate-notes)
+          if [ "$DRAFT" = "true" ]; then args+=(--draft); fi
+          gh release create "v$VERSION" dist/* "${args[@]}"
