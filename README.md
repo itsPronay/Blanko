@@ -14,6 +14,8 @@
 
 This app was inspired by [Blanket](https://github.com/rafaelmardojai/blanket), originally a GNOME application. You can think of this project as an all-in-one desktop version of Blanket. Supports macOS, Windows, Linux (few versions)
 
+<img width="1280" height="849" alt="pp" src="https://github.com/user-attachments/assets/c435f963-4e2c-467d-bc86-3b5bbeacce96" />
+
 ## Description
 
 Improve focus and increase your productivity by listening to different sounds. Blanko can also be used to help you to fall asleep in a noisy environment.
