@@ -30,7 +30,7 @@ Improve focus and increase your productivity by listening to different sounds. B
 
 ## Installation
 
-Download the installer for your system from the [GitHub Releases](https://github.com/itsPronay/blankee/releases) page:
+Download the installer for your system from the [GitHub Releases](https://github.com/itsPronay/blanko/releases) page:
 
 | System | Installer |
 |---|---|
