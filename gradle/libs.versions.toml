@@ -15,8 +15,6 @@ jcodec = "0.2.5"
 jlayer = "1.0.1.4"
 vorbisSpi = "1.2.1"
 junit = "4.13.2"
-spotless = "6.25.0"
-ktlint = "1.4.1"
 
 [libraries]
 # Kotlin / coroutines
@@ -54,4 +52,3 @@ kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 google-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
