@@ -1,0 +1,12 @@
+# Gradle
+.gradle/
+build/
+.kotlin/
+
+# IDE (shared run configurations in .run/ are kept)
+.idea/
+*.iml
+local.properties
+
+# OS
+.DS_Store
